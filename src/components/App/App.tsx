@@ -3,7 +3,7 @@ import Container from '../Container/Container';
 import Form from '../Form/Form';
 import { getPhotos } from '../../services/photos';
 import PhotosGallery from '../PhotosGallery/PhotosGallery';
-import { use, useState } from 'react';
+import { useState } from 'react';
 import type { Photo } from '../../types/photo';
 import toast, { Toaster } from 'react-hot-toast';
 import Loader from '../Loader/Loader';
