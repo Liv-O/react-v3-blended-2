@@ -1,5 +1,5 @@
 import axios from "axios";
-import { NewPost, Post } from "../types/post";
+import { EditedPost, NewPost, Post } from "../types/post";
 
 axios.defaults.baseURL = "https://jsonplaceholder.typicode.com";
 
@@ -26,7 +26,7 @@ export const createPost = async (newPost: NewPost): Promise<Post> => {
   return data.data;
 };
 
-export const editPost = async (newDataPost: Post): Promise<Post> => {
+export const editPost = async (newDataPost: EditedPost): Promise<Post> => {
   const data = await axios.patch<Post>(`/posts/:${newDataPost.id}`, newDataPost);
   console.log(data);
   return data.data;

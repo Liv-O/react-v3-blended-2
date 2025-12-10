@@ -2,10 +2,58 @@ import * as Yup from "yup";
 import { Field, Form, Formik, FormikHelpers, ErrorMessage } from "formik";
 
 import css from "./CreatePostForm.module.css";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createPost } from "../../services/postService";
+import { NewPost } from "../../types/post";
 
-export default function PostForm() {
+interface PostFormValues {
+  title: string;
+  body: string;
+}
+const initialValues: PostFormValues = {
+  title: "",
+  body: "",
+};
+
+interface PostFormProps {
+  closeModal: () => void;
+}
+
+export default function PostForm({ closeModal }: PostFormProps) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (newNoteInfo: NewPost) => {
+      return createPost(newNoteInfo);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      alert("Post created successfully!");
+    },
+  });
+
+  const PostFormSchema = Yup.object().shape({
+    title: Yup.string()
+      .min(3, "Title must be at least 3 characters")
+      .max(50, "Title can be maximum 50 characters long")
+      .required("Title is required"),
+    body: Yup.string()
+      .max(500, "Content can have maximum 500 characters")
+      .required("Content is required"),
+  });
+
+  const handleSubmit = async (values: PostFormValues, actions: FormikHelpers<PostFormValues>) => {
+    try {
+      await mutation.mutateAsync(values); // <-- чекаємо реальний API виклик
+
+      actions.resetForm();
+      closeModal();
+    } catch (error) {
+      console.error("Failed to create post:", error);
+    }
+  };
   return (
-    <Formik initialValues={} onSubmit={} validationSchema={}>
+    <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={PostFormSchema}>
       <Form className={css.form}>
         <div className={css.formGroup}>
           <label htmlFor="title">Title</label>
@@ -20,10 +68,10 @@ export default function PostForm() {
         </div>
 
         <div className={css.actions}>
-          <button type="button" className={css.cancelButton}>
+          <button type="button" className={css.cancelButton} onClick={closeModal}>
             Cancel
           </button>
-          <button type="submit" className={css.submitButton} disabled={}>
+          <button type="submit" className={css.submitButton} disabled={mutation.isPending}>
             Create post
           </button>
         </div>

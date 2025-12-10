@@ -9,3 +9,9 @@ export interface NewPost {
   title: string;
   body: string;
 }
+
+export interface EditedPost {
+  id: number;
+  title: string;
+  body: string;
+}

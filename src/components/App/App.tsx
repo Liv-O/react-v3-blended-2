@@ -8,6 +8,10 @@ import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchPosts } from "../../services/postService";
 import { useDebouncedCallback } from "use-debounce";
+import { EditedPost } from "../../types/post";
+import CreatePostForm from "../CreatePostForm/CreatePostForm";
+import EditPostForm from "../EditPostForm/EditPostForm";
+import Loader from "../Loader/Loader";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -15,9 +19,10 @@ export default function App() {
   const [isCreatePost, setIsCreatePost] = useState<boolean>(false);
   const [isEditPost, setIsEditPost] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [editedPost, setEditedPost] = useState<EditedPost>({ id: 0, title: "", body: "" });
 
   const { data, isLoading, isError, isSuccess } = useQuery({
-    queryKey: ["notes", searchQuery, currentPage],
+    queryKey: ["posts", searchQuery, currentPage],
     queryFn: () => fetchPosts(searchQuery, currentPage),
     placeholderData: keepPreviousData,
   });
@@ -28,6 +33,23 @@ export default function App() {
     setSearchQuery(search);
     setCurrentPage(1);
   }, 300);
+
+  const createPost = () => {
+    setIsModalOpen(true);
+    setIsCreatePost(true);
+  };
+
+  const editPostToggle = () => {
+    setIsModalOpen(true);
+    setIsEditPost(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    if (isCreatePost) {
+      setIsCreatePost(false);
+    } else setIsEditPost(false);
+  };
 
   return (
     <div className={css.app}>
@@ -40,10 +62,31 @@ export default function App() {
             onPageChange={setCurrentPage}
           />
         )}
-        <button className={css.button}>Create post</button>
+        <button className={css.button} onClick={createPost}>
+          Create post
+        </button>
       </header>
-      <main>{data?.posts && <PostList posts={data.posts} />}</main>
-      <Modal>{/* Передати через children компонент CreatePostForm або EditPostForm */}</Modal>
+      <main>
+        {isLoading && <Loader />}
+        {isError && <p>There was an error, please try again...</p>}
+        {data?.posts && (
+          <PostList
+            posts={data.posts}
+            toggleEditPost={setEditedPost}
+            toggleModal={editPostToggle}
+          />
+        )}
+      </main>
+      {isModalOpen && isCreatePost && (
+        <Modal onClose={closeModal}>
+          <CreatePostForm closeModal={closeModal} />
+        </Modal>
+      )}
+      {isModalOpen && isEditPost && (
+        <Modal onClose={closeModal}>
+          <EditPostForm editPostData={editedPost} closeModal={closeModal} />
+        </Modal>
+      )}
     </div>
   );
 }
